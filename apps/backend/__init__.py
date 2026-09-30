@@ -19,9 +19,12 @@ def create_app():
     app.config["SESSION_COOKIE_SECURE"] = True
 
     CORS(
-        app,
-        origins=["http://localhost:3000"],
-        supports_credentials=True
+    app,
+    origins=[
+        "http://localhost:3000",
+        "https://task-management-app-five-gules.vercel.app"
+    ],
+    supports_credentials=True
     )
 
     app.register_blueprint(health_bp)
