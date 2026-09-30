@@ -25,7 +25,7 @@ type TaskCardProps = {
   users: User[];
   currentUserId: string;
   onComplete: (taskId: string) => void | Promise<void>;
-  onDelete: (taskId: string) => void;
+  onDelete: (taskId: string) => void | Promise<void>;
 };
 
 export default function TaskCard({
@@ -36,6 +36,7 @@ export default function TaskCard({
   onDelete
 }: TaskCardProps) {
   const [completing, setCompleting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const getUserName = () => {
     if (!task.assigned_to) {
@@ -66,7 +67,7 @@ export default function TaskCard({
   };
 
   const handleComplete = async () => {
-    if (completing) {
+    if (completing || deleting) {
       return;
     }
 
@@ -74,8 +75,30 @@ export default function TaskCard({
 
     try {
       await onComplete(task.id);
-    } catch (e) {
+    } catch {
       setCompleting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (deleting || completing) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this task?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+
+    try {
+      await onDelete(task.id);
+    } catch {
+      setDeleting(false);
     }
   };
 
@@ -112,17 +135,13 @@ export default function TaskCard({
             {task.due_date && (
               <p className="text-sm text-gray-500">
                 Due:{" "}
-                {new Date(
-                  task.due_date
-                ).toLocaleString()}
+                {new Date(task.due_date).toLocaleString()}
               </p>
             )}
 
             <p className="text-sm text-gray-400">
               Created:{" "}
-              {new Date(
-                task.created_at
-              ).toLocaleString()}
+              {new Date(task.created_at).toLocaleString()}
             </p>
           </div>
         </div>
@@ -137,12 +156,14 @@ export default function TaskCard({
             </Button>
           )}
 
-          <Button
-            variant="secondary"
-            onClick={() => onDelete(task.id)}
-          >
-            Delete
-          </Button>
+          {task.created_by === currentUserId && !deleting && (
+            <Button
+              variant="secondary"
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          )}
         </div>
       </div>
     </div>
