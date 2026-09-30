@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Button from "./Button";
 
 type User = {
@@ -23,7 +24,7 @@ type TaskCardProps = {
   task: Task;
   users: User[];
   currentUserId: string;
-  onComplete: (taskId: string) => void;
+  onComplete: (taskId: string) => void | Promise<void>;
   onDelete: (taskId: string) => void;
 };
 
@@ -34,21 +35,23 @@ export default function TaskCard({
   onComplete,
   onDelete
 }: TaskCardProps) {
+  const [completing, setCompleting] = useState(false);
+
   const getUserName = () => {
-  if (!task.assigned_to) {
-    return "Unassigned";
-  }
+    if (!task.assigned_to) {
+      return "Unassigned";
+    }
 
-  if (task.assigned_to === currentUserId) {
-    return "You";
-  }
+    if (task.assigned_to === currentUserId) {
+      return "You";
+    }
 
-  const user = users.find(
-    (user) => user.id === task.assigned_to
-  );
+    const user = users.find(
+      (user) => user.id === task.assigned_to
+    );
 
-  return user ? user.name : "Unknown user";
-};
+    return user ? user.name : "Unknown user";
+  };
 
   const getStatusClass = () => {
     if (task.status === "COMPLETED") {
@@ -60,6 +63,20 @@ export default function TaskCard({
     }
 
     return "bg-yellow-100 text-yellow-700";
+  };
+
+  const handleComplete = async () => {
+    if (completing) {
+      return;
+    }
+
+    setCompleting(true);
+
+    try {
+      await onComplete(task.id);
+    } catch (e) {
+      setCompleting(false);
+    }
   };
 
   return (
@@ -111,23 +128,21 @@ export default function TaskCard({
         </div>
 
         <div className="flex gap-2">
-          {task.status !== "COMPLETED" && (
+          {task.status !== "COMPLETED" && !completing && (
             <Button
               variant="success"
-              onClick={() => onComplete(task.id)}
+              onClick={handleComplete}
             >
               Complete
             </Button>
           )}
 
-          {task.created_by === currentUserId && (
-            <Button
-              variant="secondary"
-              onClick={() => onDelete(task.id)}
-            >
-              Delete
-            </Button>
-          )}
+          <Button
+            variant="secondary"
+            onClick={() => onDelete(task.id)}
+          >
+            Delete
+          </Button>
         </div>
       </div>
     </div>
