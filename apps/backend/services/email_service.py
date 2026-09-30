@@ -6,16 +6,24 @@ load_dotenv()
 
 def send_email(to_email, subject, body):
     response = requests.post(
-        "https://api.resend.com/emails",
+        "https://api.brevo.com/v3/smtp/email",
         headers={
-            "Authorization": f"Bearer {os.getenv('RESEND_API_KEY')}",
-            "Content-Type": "application/json"
+            "accept": "application/json",
+            "api-key": os.getenv("BREVO_API_KEY"),
+            "content-type": "application/json"
         },
         json={
-            "from": "onboarding@resend.dev",
-            "to": [to_email],
+            "sender": {
+                "email": os.getenv("BREVO_FROM_EMAIL"),
+                "name": "Task Manager"
+            },
+            "to": [
+                {
+                    "email": to_email
+                }
+            ],
             "subject": subject,
-            "text": body
+            "textContent": body
         },
         timeout=10
     )
