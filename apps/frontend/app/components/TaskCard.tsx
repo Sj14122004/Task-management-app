@@ -85,14 +85,6 @@ export default function TaskCard({
       return;
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this task?"
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
     setDeleting(true);
 
     try {
