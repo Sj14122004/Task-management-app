@@ -1,20 +1,26 @@
 import os
-import smtplib
-from email.message import EmailMessage
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
 def send_email(to_email, subject, body):
-    message = EmailMessage()
-    message["From"] = os.getenv("GMAIL_EMAIL")
-    message["To"] = to_email
-    message["Subject"] = subject
-    message.set_content(body)
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {os.getenv('RESEND_API_KEY')}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "from": "onboarding@resend.dev",
+            "to": [to_email],
+            "subject": subject,
+            "text": body
+        },
+        timeout=10
+    )
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(
-            os.getenv("GMAIL_EMAIL"),
-            os.getenv("GMAIL_APP_PASSWORD")
-        )
-        server.send_message(message)
+    if not response.ok:
+        raise Exception(f"Email failed: {response.text}")
+
+    return response.json()
